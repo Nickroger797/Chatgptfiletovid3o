@@ -3,9 +3,8 @@ import os
 import ffmpeg
 import database
 from pyrogram import Client, filters
-from config import API_ID, API_HASH, BOT_TOKEN
+from config import API_ID, API_HASH, BOT_TOKEN, MONGO_URL
 from pymongo import MongoClient
-from config import MONGO_URL
 
 # ✅ Debugging Mode Enable
 logging.basicConfig(level=logging.DEBUG)
@@ -41,7 +40,20 @@ async def start_handler(client, message):
 def convert_video(input_path):
     output_path = input_path.replace(".mp4", "_converted.mp4")  # नया नाम
     try:
-        ffmpeg.input(input_path).output(output_path, vcodec="libx264", preset="ultrafast").run(cmd="/usr/bin/ffmpeg")
+        (
+            ffmpeg
+            .input(input_path)
+            .output(
+                output_path,
+                vcodec="libx264",
+                preset="fast",
+                crf=23,
+                acodec="aac",
+                b="a:128k",
+                movflags="+faststart"
+            )
+            .run(cmd="/usr/bin/ffmpeg", overwrite_output=True)
+        )
         return output_path
     except Exception as e:
         logging.error(f"FFmpeg Error: {e}")
@@ -69,8 +81,15 @@ async def convert_handler(client, message):
             caption="✅ Here is your converted video!",
             supports_streaming=True
         )
-        os.remove(file_path)
-        os.remove(output_path)
+        
+        # ✅ Unused files delete करें
+        try:
+            os.remove(file_path)
+            os.remove(output_path)
+        except Exception as e:
+            logging.error(f"File Delete Error: {e}")
+
+        # ✅ MongoDB में लॉग सेव करें
         logs_col.insert_one({"user_id": user_id, "status": "converted"})
     else:
         await message.reply_text("❌ Conversion failed. Please try again.")
