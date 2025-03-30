@@ -2,3 +2,4 @@ pyrogram
 pymongo
 ffmpeg-python
 dotenv
+TgCrypto
