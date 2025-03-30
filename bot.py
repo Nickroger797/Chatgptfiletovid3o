@@ -12,7 +12,7 @@ bot = Client(
     bot_token=BOT_TOKEN
 )
 
-# Register Handlers
+# ✅ सारे handlers को properly register कर
 def register_handlers():
     register_start_handler(bot)
     register_convert_handler(bot)
