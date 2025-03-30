@@ -8,6 +8,6 @@ async def stats_handler(client: Client, message: Message):
     
     await message.reply_text(f"📊 **Bot Stats**:\n👥 Total Users: {total_users}\n🎥 Total Conversions: {total_conversions}")
 
-# ✅ Correct way to register handler
+# ✅ सही तरीका: Handler को register करने का
 def register_stats_handler(bot: Client):
-    bot.add_handler(filters.command("stats") & filters.private, stats_handler)
+    bot.add_handler(Client.on_message(filters.command("stats"))(stats_handler))
