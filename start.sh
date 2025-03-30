@@ -1,13 +1,10 @@
 #!/bin/bash
 
-# Ensure all necessary permissions
+echo "✅ Starting Video Converter Bot..."
+
+# स्टार्ट.sh को एक्सीक्यूटेबल बनाओ (सिर्फ एक बार, अगर जरूरी हो)
 chmod +x start.sh
 
-# Install FFmpeg
-sudo apt update && sudo apt install -y ffmpeg
-
-# Activate virtual environment (अगर कोई हो)
-# source venv/bin/activate  
-
-python3 bot.py &  # Bot बैकग्राउंड में रन होगा
+# बॉट स्टार्ट करो
+python3 bot.py
 python3 healthcheck.py  # Health check सर्वर रन करेगा
