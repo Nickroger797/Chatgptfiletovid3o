@@ -1,8 +1,6 @@
 from pyrogram import Client
 from config import API_ID, API_HASH, BOT_TOKEN
-from handlers.start import start_handler
-from handlers.convert import convert_handler
-from handlers.stats import stats_handler
+from handlers import start_handler, convert_handler, stats_handler
 
 # Initialize Bot
 bot = Client(
