@@ -20,4 +20,5 @@ bot.add_handler(stats_handler)
 
 # Run Bot
 if __name__ == "__main__":
+    start_flask()  # Fake HTTP Server for Koyeb Health Check
     bot.run()
