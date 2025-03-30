@@ -4,8 +4,11 @@ from utils.ffmpeg_util import convert_video
 from database import logs_col
 import os
 
+# ✅ Video Convert Handler
+@Client.on_message(filters.video | filters.document)
 async def convert_handler(client: Client, message: Message):
     user_id = message.from_user.id
+    
     if not message.video and not message.document:
         await message.reply_text("⚠️ Please send a video file.")
         return
@@ -17,8 +20,12 @@ async def convert_handler(client: Client, message: Message):
     os.remove(file_path)
     os.remove(output_path)
     
-    logs_col.insert_one({"user_id": user_id, "file": message.document.file_name if message.document else "video", "status": "converted"})
+    logs_col.insert_one({
+        "user_id": user_id, 
+        "file": message.document.file_name if message.document else "video", 
+        "status": "converted"
+    })
 
-# ✅ सही तरीका: Handler को register करने का
+# ✅ Handler को Register करने का सही तरीका
 def register_convert_handler(bot: Client):
-    bot.add_handler(Client.on_message(filters.video | filters.document)(convert_handler))
+    bot.add_handler(convert_handler)
