@@ -1,3 +1,4 @@
 #!/bin/bash
-python3 bot.py &  # Bot को background में चलाओ
-python3 healthcheck.py  # Health check server run करो
+chmod +x healthcheck.py
+python3 bot.py &  # Bot बैकग्राउंड में रन होगा
+python3 healthcheck.py  # Health check सर्वर रन करेगा
