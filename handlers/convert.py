@@ -19,4 +19,6 @@ async def convert_handler(client: Client, message: Message):
     
     logs_col.insert_one({"user_id": user_id, "file": message.document.file_name if message.document else "video", "status": "converted"})
 
-convert_handler = (filters.video | filters.document, convert_handler)
+# ✅ Correct way to register handler
+def register_convert_handler(bot: Client):
+    bot.add_handler(filters.video | filters.document & filters.incoming, convert_handler)
