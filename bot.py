@@ -1,21 +1,12 @@
 import logging
+import importlib
+import os
 from pyrogram import Client
 from config import API_ID, API_HASH, BOT_TOKEN
-from handlers.start import register_start_handler
-from handlers.convert import register_convert_handler
-from handlers.stats import register_stats_handler
-import database  # ✅ Database connection import
+import database
 
 # ✅ Debugging Mode Enable (Logs देखने के लिए)
 logging.basicConfig(level=logging.DEBUG)
-
-# ✅ Check MongoDB Connection
-try:
-    database.client.server_info()
-    print("✅ MongoDB Connected Successfully!")
-except Exception as e:
-    print("❌ MongoDB Connection Error:", e)
-    exit(1)  # Bot को बंद कर दो अगर database connect नहीं हुआ
 
 # ✅ Initialize Bot
 bot = Client(
@@ -25,14 +16,21 @@ bot = Client(
     bot_token=BOT_TOKEN
 )
 
-# ✅ Register All Handlers
+# ✅ Automatically Load All Handlers from 'handlers' Folder
 def register_handlers():
-    register_start_handler(bot)
-    register_convert_handler(bot)
-    register_stats_handler(bot)
+    handlers_folder = "handlers"
+    for filename in os.listdir(handlers_folder):
+        if filename.endswith(".py") and filename != "__init__.py":
+            module_name = f"{handlers_folder}.{filename[:-3]}"
+            try:
+                module = importlib.import_module(module_name)
+                if hasattr(module, "register"):
+                    module.register(bot)  # Call register function inside each handler
+                    logging.info(f"✔ Loaded: {module_name}")
+            except Exception as e:
+                logging.error(f"❌ Error loading {module_name}: {e}")
 
 # ✅ Run Bot
 if __name__ == "__main__":
     register_handlers()
     bot.run()
-  
