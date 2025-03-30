@@ -16,9 +16,9 @@ try:
     users_col = db["users"]
     logs_col = db["conversion_logs"]
     client.server_info()
-    print("✅ MongoDB Connected Successfully!")
+    print("\u2705 MongoDB Connected Successfully!")
 except Exception as e:
-    print("❌ MongoDB Connection Error:", e)
+    print("\u274c MongoDB Connection Error:", e)
     exit(1)
 
 # ✅ Initialize Bot
@@ -34,11 +34,11 @@ bot = Client(
 async def start_handler(client, message):
     user_id = message.from_user.id
     users_col.update_one({"user_id": user_id}, {"$set": {"user_id": user_id}}, upsert=True)
-    await message.reply_text("👋 Welcome! Send me a video file, and I'll convert it to Telegram's gallery mode.")
+    await message.reply_text("\ud83d\udc4b Welcome! Send me a video file, and I'll convert it to Telegram's gallery mode.")
 
 # ✅ Convert Video Function
 def convert_video(input_path):
-    output_path = input_path.replace(".mp4", "_converted.mp4")  # नया नाम
+    output_path = input_path.rsplit(".", 1)[0] + "_converted.mp4"  # नया नाम
     try:
         (
             ffmpeg
@@ -46,11 +46,10 @@ def convert_video(input_path):
             .output(
                 output_path,
                 vcodec="libx264",
-                preset="fast",
-                crf=23,
+                b="1000k",
                 acodec="aac",
-                b="a:128k",
-                movflags="+faststart"
+                b_a="128k",
+                y=None
             )
             .run(cmd="/usr/bin/ffmpeg", overwrite_output=True)
         )
@@ -59,17 +58,30 @@ def convert_video(input_path):
         logging.error(f"FFmpeg Error: {e}")
         return None
 
+# ✅ Fire Animation Effect
+async def send_fire_animation(client, chat_id):
+    fire_emoji = "\ud83d\udd25"
+    fire_animation = """
+{0}      {0}      {0}
+   {0}  {0}  {0}
+      {0}{0}{0}
+   {0}  {0}  {0}
+{0}      {0}      {0}
+    """.format(fire_emoji)
+    await client.send_message(chat_id, f"```{fire_animation}```", parse_mode="markdown")
+
 # ✅ Video Convert Handler
 @bot.on_message(filters.video | filters.document)
 async def convert_handler(client, message):
     user_id = message.from_user.id
 
     if not message.video and not message.document:
-        await message.reply_text("⚠️ Please send a video file.")
+        await message.reply_text("\u26a0\ufe0f Please send a video file.")
         return
 
-    # ✅ सबसे पहले यूज़र को रिप्लाई करो कि वीडियो कन्वर्ट हो रही है
-    processing_msg = await message.reply_text("⏳ Your file is being converted, please wait...")
+    # ✅ "Converting..." Message & Fire Animation
+    processing_msg = await message.reply_text("\u23f3 Your file is being converted, please wait...")
+    await send_fire_animation(client, message.chat.id)
 
     file_path = await message.download()
     output_path = convert_video(file_path)
@@ -78,7 +90,7 @@ async def convert_handler(client, message):
         await client.send_video(
             chat_id=message.chat.id,
             video=output_path,
-            caption="✅ Here is your converted video!",
+            caption="\u2705 Here is your converted video!",
             supports_streaming=True
         )
         
@@ -92,7 +104,7 @@ async def convert_handler(client, message):
         # ✅ MongoDB में लॉग सेव करें
         logs_col.insert_one({"user_id": user_id, "status": "converted"})
     else:
-        await message.reply_text("❌ Conversion failed. Please try again.")
+        await message.reply_text("\u274c Conversion failed. Please try again.")
 
     # ✅ "Converting..." वाले message को हटा दो
     await processing_msg.delete()
@@ -102,8 +114,9 @@ async def convert_handler(client, message):
 async def stats_handler(client, message):
     total_users = users_col.count_documents({})
     total_conversions = logs_col.count_documents({})
-    await message.reply_text(f"📊 **Bot Stats**:\n👥 Total Users: {total_users}\n🎥 Total Conversions: {total_conversions}")
+    await message.reply_text(f"\ud83d\udcca **Bot Stats**:\n\ud83d\udc65 Total Users: {total_users}\n\ud83c\udfa5 Total Conversions: {total_conversions}")
 
 # ✅ Run Bot
 if __name__ == "__main__":
     bot.run()
+    
