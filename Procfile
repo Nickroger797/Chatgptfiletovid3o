@@ -1,1 +1,1 @@
-web: python bot.py & python server.py
+web: ./start.sh
