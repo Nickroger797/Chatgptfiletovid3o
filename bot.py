@@ -3,6 +3,7 @@ from config import API_ID, API_HASH, BOT_TOKEN
 from handlers.start import start_handler
 from handlers.convert import convert_handler
 from handlers.stats import stats_handler
+from server import start_flask
 
 # Initialize Bot
 bot = Client(
