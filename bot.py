@@ -1,5 +1,8 @@
-from pyrogram import Client, filters
+from pyrogram import Client
 from config import API_ID, API_HASH, BOT_TOKEN
+from handlers.start import register_handlers as start_handlers
+from handlers.convert import register_convert_handler
+from handlers.stats import register_stats_handler
 
 # Initialize Bot
 bot = Client(
@@ -9,20 +12,10 @@ bot = Client(
     bot_token=BOT_TOKEN
 )
 
-# Start Command Handler
-@bot.on_message(filters.command("start"))
-async def start_handler(client, message):
-    await message.reply_text("Hello! I am your Video Converter Bot. Send me a file to convert.")
-
-# Convert Handler
-@bot.on_message(filters.video | filters.document)
-async def convert_handler(client, message):
-    await message.reply_text("Processing your file...")
-
-# Stats Command Handler
-@bot.on_message(filters.command("stats"))
-async def stats_handler(client, message):
-    await message.reply_text("Bot Stats: \nTotal Users: 100\nTotal Conversions: 500")
+# Register Handlers
+start_handlers(bot)
+register_convert_handler(bot)
+register_stats_handler(bot)
 
 # Run Bot
 if __name__ == "__main__":
