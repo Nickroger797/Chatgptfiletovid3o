@@ -68,8 +68,8 @@ async def send_fire_animation(client, chat_id):
    {fire_emoji}  {fire_emoji}  {fire_emoji}
 {fire_emoji}      {fire_emoji}      {fire_emoji}
     """
-
-    await client.send_message(chat_id, f"<pre>{fire_animation}</pre>", parse_mode="html")  # ✅ FIXED
+    
+    await client.send_message(chat_id, f"<code>{fire_animation}</code>", entities=[])
     
 # ✅ Video Convert Handler
 @bot.on_message(filters.video | filters.document)
