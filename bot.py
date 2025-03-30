@@ -1,5 +1,6 @@
 import logging
 import os
+import re
 import ffmpeg
 import database
 from pyrogram import Client, filters
@@ -29,16 +30,28 @@ bot = Client(
     bot_token=BOT_TOKEN
 )
 
-# ✅ Start Command
-@bot.on_message(filters.command("start"))
-async def start_handler(client, message):
-    user_id = message.from_user.id
-    users_col.update_one({"user_id": user_id}, {"$set": {"user_id": user_id}}, upsert=True)
-    await message.reply_text("\ud83d\udc4b Welcome! Send me a video file, and I'll convert it to Telegram's gallery mode.")
+# ✅ फाइल का नाम क्लीन करने का फ़ंक्शन
+def clean_filename(filename):
+    return re.sub(r'[^\w.-]', '_', filename)  # केवल letters, numbers, underscore, dot और hyphen रहने दें
 
-# ✅ Convert Video Function
+# ✅ वीडियो रीमक्स करने का फ़ंक्शन
+def remux_video(input_path):
+    temp_output = input_path.rsplit(".", 1)[0] + "_remuxed.mkv"
+    try:
+        (
+            ffmpeg
+            .input(input_path, err_detect="ignore_err")
+            .output(temp_output, c="copy", map="0")
+            .run(cmd="/usr/bin/ffmpeg", overwrite_output=True)
+        )
+        return temp_output
+    except Exception as e:
+        logging.error(f"Remux Error: {e}")
+        return None
+
+# ✅ वीडियो कन्वर्ज़न करने का फ़ंक्शन
 def convert_video(input_path):
-    output_path = input_path.rsplit(".", 1)[0] + "_converted.mp4"  # नया नाम
+    output_path = input_path.rsplit(".", 1)[0] + "_converted.mp4"
     try:
         (
             ffmpeg
@@ -58,6 +71,13 @@ def convert_video(input_path):
         logging.error(f"FFmpeg Error: {e}")
         return None
 
+# ✅ Start Command
+@bot.on_message(filters.command("start"))
+async def start_handler(client, message):
+    user_id = message.from_user.id
+    users_col.update_one({"user_id": user_id}, {"$set": {"user_id": user_id}}, upsert=True)
+    await message.reply_text("\ud83d\udc4b Welcome! Send me a video file, and I'll convert it to Telegram's gallery mode.")
+
 # ✅ Video Convert Handler
 @bot.on_message(filters.video | filters.document)
 async def convert_handler(client, message):
@@ -67,10 +87,14 @@ async def convert_handler(client, message):
         await message.reply_text("\u26a0\ufe0f Please send a video file.")
         return
 
-    # ✅ "Converting..." Message
     processing_msg = await message.reply_text("\u23f3 Your file is being converted, please wait...")
-
+    
     file_path = await message.download()
+    clean_path = os.path.join(os.path.dirname(file_path), clean_filename(os.path.basename(file_path)))
+    os.rename(file_path, clean_path)
+    file_path = clean_path
+    
+    file_path = remux_video(file_path) or file_path  # रीमक्स करके सही करो
     output_path = convert_video(file_path)
 
     if output_path:
@@ -81,19 +105,16 @@ async def convert_handler(client, message):
             supports_streaming=True
         )
         
-        # ✅ Unused files delete करें
         try:
             os.remove(file_path)
             os.remove(output_path)
         except Exception as e:
             logging.error(f"File Delete Error: {e}")
 
-        # ✅ MongoDB में लॉग सेव करें
         logs_col.insert_one({"user_id": user_id, "status": "converted"})
     else:
         await message.reply_text("\u274c Conversion failed. Please try again.")
-
-    # ✅ "Converting..." वाले message को हटा दो
+    
     await processing_msg.delete()
 
 # ✅ Stats Command
