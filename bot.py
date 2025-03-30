@@ -12,7 +12,7 @@ bot = Client(
     bot_token=BOT_TOKEN
 )
 
-# Register Handlers
+# ✅ Register Handlers
 register_start_handler(bot)
 register_convert_handler(bot)
 register_stats_handler(bot)
