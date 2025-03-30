@@ -41,7 +41,7 @@ async def start_handler(client, message):
 def convert_video(input_path):
     output_path = input_path.replace(".mp4", "_converted.mp4")  # नया नाम
     try:
-        ffmpeg.input(input_path).output(output_path, vcodec="libx264", preset="ultrafast").run()
+        ffmpeg.input(input_path).output(output_path, vcodec="libx264", preset="ultrafast").run(cmd="/usr/bin/ffmpeg")
         return output_path
     except Exception as e:
         logging.error(f"FFmpeg Error: {e}")
