@@ -48,7 +48,7 @@ def convert_video(input_path):
                 vcodec="libx264",
                 b="1000k",
                 acodec="aac",
-                b_a="128k",
+                audio_bitrate="128k",
                 y=None
             )
             .run(cmd="/usr/bin/ffmpeg", overwrite_output=True)
@@ -58,19 +58,6 @@ def convert_video(input_path):
         logging.error(f"FFmpeg Error: {e}")
         return None
 
-# ✅ Fire Animation Effect
-async def send_fire_animation(client, chat_id):
-    fire_emoji = "🔥"
-    fire_animation = f"""
-{fire_emoji}      {fire_emoji}      {fire_emoji}
-   {fire_emoji}  {fire_emoji}  {fire_emoji}
-      {fire_emoji}{fire_emoji}{fire_emoji}
-   {fire_emoji}  {fire_emoji}  {fire_emoji}
-{fire_emoji}      {fire_emoji}      {fire_emoji}
-    """
-    
-    await client.send_message(chat_id, f"<code>{fire_animation}</code>", entities=[])
-    
 # ✅ Video Convert Handler
 @bot.on_message(filters.video | filters.document)
 async def convert_handler(client, message):
@@ -80,9 +67,8 @@ async def convert_handler(client, message):
         await message.reply_text("\u26a0\ufe0f Please send a video file.")
         return
 
-    # ✅ "Converting..." Message & Fire Animation
+    # ✅ "Converting..." Message
     processing_msg = await message.reply_text("\u23f3 Your file is being converted, please wait...")
-    await send_fire_animation(client, message.chat.id)
 
     file_path = await message.download()
     output_path = convert_video(file_path)
@@ -120,4 +106,3 @@ async def stats_handler(client, message):
 # ✅ Run Bot
 if __name__ == "__main__":
     bot.run()
-    
