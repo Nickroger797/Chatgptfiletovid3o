@@ -60,16 +60,17 @@ def convert_video(input_path):
 
 # ✅ Fire Animation Effect
 async def send_fire_animation(client, chat_id):
-    fire_emoji = "\ud83d\udd25"
-    fire_animation = """
-{0}      {0}      {0}
-   {0}  {0}  {0}
-      {0}{0}{0}
-   {0}  {0}  {0}
-{0}      {0}      {0}
-    """.format(fire_emoji)
-    await client.send_message(chat_id, f"```{fire_animation}```", parse_mode="markdown2")
+    fire_emoji = "🔥"
+    fire_animation = f"""
+{fire_emoji}      {fire_emoji}      {fire_emoji}
+   {fire_emoji}  {fire_emoji}  {fire_emoji}
+      {fire_emoji}{fire_emoji}{fire_emoji}
+   {fire_emoji}  {fire_emoji}  {fire_emoji}
+{fire_emoji}      {fire_emoji}      {fire_emoji}
+    """
 
+    await client.send_message(chat_id, f"<pre>{fire_animation}</pre>", parse_mode="html")  # ✅ FIXED
+    
 # ✅ Video Convert Handler
 @bot.on_message(filters.video | filters.document)
 async def convert_handler(client, message):
