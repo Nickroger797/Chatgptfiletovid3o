@@ -19,4 +19,4 @@ async def convert_handler(client: Client, message: Message):
     
     logs_col.insert_one({"user_id": user_id, "file": message.document.file_name if message.document else "video", "status": "converted"})
 
-convert_handler = filters.video | filters.document(convert_handler)
+convert_handler = (filters.video | filters.document, convert_handler)
