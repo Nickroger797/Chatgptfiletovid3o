@@ -1,6 +1,6 @@
 from pyrogram import Client
 from config import API_ID, API_HASH, BOT_TOKEN
-from handlers.start import register_handlers as start_handlers
+from handlers.start import register_start_handler
 from handlers.convert import register_convert_handler
 from handlers.stats import register_stats_handler
 
@@ -13,7 +13,7 @@ bot = Client(
 )
 
 # Register Handlers
-start_handlers(bot)
+register_start_handler(bot)
 register_convert_handler(bot)
 register_stats_handler(bot)
 
