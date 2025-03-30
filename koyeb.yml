@@ -1,0 +1,23 @@
+name: video_converter_bot
+
+build:
+  commands:
+    - apt update && apt install -y ffmpeg
+
+services:
+  - name: bot
+    type: web
+    plan: free
+    build_command: ""
+    run_command: "python3 bot.py"
+    env:
+      - name: API_ID
+        value: "your_api_id"
+      - name: API_HASH
+        value: "your_api_hash"
+      - name: BOT_TOKEN
+        value: "your_bot_token"
+      - name: MONGO_URI
+        value: "your_mongo_uri"
+    ports:
+      - 8080
