@@ -1,17 +1,10 @@
-from http.server import HTTPServer, BaseHTTPRequestHandler
+from flask import Flask
 
-class HealthCheckHandler(BaseHTTPRequestHandler):
-    def do_GET(self):
-        self.send_response(200)
-        self.send_header("Content-type", "text/plain")
-        self.end_headers()
-        self.wfile.write(b"OK")
+app = Flask(__name__)
 
-def run(server_class=HTTPServer, handler_class=HealthCheckHandler):
-    server_address = ("", 8080)
-    httpd = server_class(server_address, handler_class)
-    print("Health check server running on port 8080...")
-    httpd.serve_forever()
+@app.route("/")
+def home():
+    return "OK", 200  # Koyeb को बताएगा कि सर्वर सही से चल रहा है
 
 if __name__ == "__main__":
-    run()
+    app.run(host="0.0.0.0", port=8080)
