@@ -1,8 +1,0 @@
-name: telegram-video-bot
-type: worker
-build:
-  commands:
-    - apt update && apt install -y ffmpeg  # FFmpeg इंस्टॉल करो
-    - pip install -r requirements.txt  # Dependencies इंस्टॉल करो
-run:
-  command: python3 bot.py
