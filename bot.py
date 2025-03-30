@@ -1,6 +1,7 @@
 import logging
 import os
 import ffmpeg
+import database
 from pyrogram import Client, filters
 from config import API_ID, API_HASH, BOT_TOKEN
 from pymongo import MongoClient
