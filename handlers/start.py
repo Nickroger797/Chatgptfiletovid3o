@@ -7,4 +7,6 @@ async def start_handler(client: Client, message: Message):
     users_col.update_one({"user_id": user_id}, {"$set": {"user_id": user_id}}, upsert=True)
     await message.reply_text("👋 Welcome! Send me a video file, and I'll convert it to Telegram's gallery mode.")
 
-start_handler = (filters.command("start"), start_handler)
+# ✅ Correct way to add handler
+def register_handlers(bot: Client):
+    bot.add_handler(filters.command("start")(start_handler))
