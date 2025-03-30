@@ -12,11 +12,13 @@ bot = Client(
     bot_token=BOT_TOKEN
 )
 
-# ✅ Register Handlers
-register_start_handler(bot)
-register_convert_handler(bot)
-register_stats_handler(bot)
+# Register Handlers
+def register_handlers():
+    register_start_handler(bot)
+    register_convert_handler(bot)
+    register_stats_handler(bot)
 
 # Run Bot
 if __name__ == "__main__":
+    register_handlers()
     bot.run()
