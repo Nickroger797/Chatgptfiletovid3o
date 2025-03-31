@@ -39,27 +39,28 @@ file_store = {}
 def clean_filename(filename):
     return re.sub(r'[^\w.-]', '_', filename)
 
-# ✅ Video Conversion Function
-def convert_video(input_path, output_format, resolution, audio_format):
+def convert_video(input_path, output_format, resolution="1M", audio_bitrate="128k"):
     output_path = input_path.rsplit(".", 1)[0] + f"_converted.{output_format}"
+    
     try:
         (
             ffmpeg
-            .input(input_path)
+            .input(input_path)  # ✅ -re हटाया क्योंकि यह input पर use होता है
             .output(
                 output_path,
                 vcodec="libx264",
-                b=resolution,
-                acodec=audio_format,
-                preset="ultrafast",  # 🔥 Super Fast Encoding
-                threads=2,           # 🔄 CPU Load Control
-                re=None              # ⏩ Real-time Mode
+                b:v=resolution,  # ✅ -b:v (Video Bitrate)
+                acodec="aac",
+                b:a=audio_bitrate,  # ✅ -b:a (Audio Bitrate)
+                preset="ultrafast",  # ✅ Fast Encoding
+                threads=2  # ✅ CPU Usage कम करेगा
             )
             .run(cmd="/usr/bin/ffmpeg", overwrite_output=True)
         )
         return output_path
-    except Exception as e:
-        logging.error(f"FFmpeg Error: {e}")
+    
+    except ffmpeg.Error as e:
+        logging.error(f"FFmpeg Error: {e.stderr.decode()}")
         return None
 
 # ✅ Start Command
