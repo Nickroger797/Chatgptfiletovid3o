@@ -51,7 +51,10 @@ def convert_video(input_path, output_format, resolution, audio_format):
                 vcodec="libx264",
                 b=resolution,
                 acodec=audio_format,
-                y=None
+                preset="ultrafast",  # ✅ Faster Encoding
+                threads=4,  # ✅ Limit CPU Usage
+                crf=23,  # ✅ Optimize Quality & Speed
+                movflags="+faststart"  # ✅ Enable Fast Streaming
             )
             .run(cmd="/usr/bin/ffmpeg", overwrite_output=True)
         )
@@ -129,42 +132,6 @@ async def resolution_handler(client, callback_query):
     ]
     
     await callback_query.message.edit_text("Select audio format:", reply_markup=InlineKeyboardMarkup(audio_formats))
-
-# ✅ Audio Selection and Convert Handler
-@bot.on_callback_query(filters.regex("^audio_"))
-async def audio_handler(client, callback_query):
-    audio_choice, res_choice, format_choice, file_id = callback_query.data.split("_", 4)[1:]
-
-    # ✅ फाइल पाथ को Retrieve करें
-    file_path = file_store.get(file_id)
-    if not file_path:
-        await callback_query.message.edit_text("⚠ File not found. Please re-upload.")
-        return
-
-    res_map = {"240p": "500k", "360p": "800k", "480p": "1200k", "720p": "2500k"}
-    resolution = res_map.get(res_choice, "1000k")
-
-    processing_msg = await callback_query.message.reply_text("\u23f3 Converting video, please wait...")
-    output_path = convert_video(file_path, format_choice, resolution, audio_choice)
-
-    if output_path:
-        await client.send_video(
-            chat_id=callback_query.message.chat.id,
-            video=output_path,
-            caption="\u2705 Here is your converted video!",
-            supports_streaming=True
-        )
-        try:
-            os.remove(file_path)
-            os.remove(output_path)
-            del file_store[file_id]  # ✅ Dictionary से फाइल हटा दो
-        except Exception as e:
-            logging.error(f"File Delete Error: {e}")
-        logs_col.insert_one({"user_id": callback_query.from_user.id, "status": "converted"})
-    else:
-        await callback_query.message.reply_text("\u274c Conversion failed. Please try again.")
-    
-    await processing_msg.delete()
 
 # ✅ Stats Command
 @bot.on_message(filters.command("stats"))
