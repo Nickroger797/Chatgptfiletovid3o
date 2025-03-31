@@ -45,15 +45,15 @@ def convert_video(input_path, output_format, resolution="1M", audio_bitrate="128
     try:
         (
             ffmpeg
-            .input(input_path)  # ✅ -re हटाया क्योंकि यह input पर use होता है
+            .input(input_path)  
             .output(
                 output_path,
                 vcodec="libx264",
-                b:v=resolution,  # ✅ -b:v (Video Bitrate)
+                **{"b:v": resolution},  # ✅ सही तरीका
                 acodec="aac",
-                b:a=audio_bitrate,  # ✅ -b:a (Audio Bitrate)
-                preset="ultrafast",  # ✅ Fast Encoding
-                threads=2  # ✅ CPU Usage कम करेगा
+                **{"b:a": audio_bitrate},  # ✅ सही तरीका
+                preset="ultrafast",  
+                threads=2  
             )
             .run(cmd="/usr/bin/ffmpeg", overwrite_output=True)
         )
