@@ -2,6 +2,7 @@ import logging
 import os
 import re
 import ffmpeg
+import uuid
 import database
 from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
@@ -30,6 +31,9 @@ bot = Client(
     api_hash=API_HASH,
     bot_token=BOT_TOKEN
 )
+
+# ✅ Temporary Filename Store
+file_store = {}
 
 # ✅ Filename Cleaner
 def clean_filename(filename):
@@ -68,15 +72,20 @@ async def start_handler(client, message):
 async def video_handler(client, message):
     user_id = message.from_user.id
     file_path = await message.download()
+    
+    # ✅ फाइल को क्लीन नाम दें
     clean_path = os.path.join(os.path.dirname(file_path), clean_filename(os.path.basename(file_path)))
     os.rename(file_path, clean_path)
-    file_path = clean_path
-    
-    # ✅ Ask user for format selection
+
+    # ✅ Unique ID बनाएं और फाइल स्टोर करें
+    file_id = str(uuid.uuid4())[:8]  # छोटा 8-character ID
+    file_store[file_id] = clean_path
+
+    # ✅ Format Select बटन भेजें
     buttons = [
-        [InlineKeyboardButton("MP4", callback_data=f"format_mp4_{file_path}"),
-         InlineKeyboardButton("MKV", callback_data=f"format_mkv_{file_path}")],
-        [InlineKeyboardButton("AVI", callback_data=f"format_avi_{file_path}")]
+        [InlineKeyboardButton("MP4", callback_data=f"format_mp4_{file_id}"),
+         InlineKeyboardButton("MKV", callback_data=f"format_mkv_{file_id}")],
+        [InlineKeyboardButton("AVI", callback_data=f"format_avi_{file_id}")]
     ]
     
     await message.reply_text("Select video format:", reply_markup=InlineKeyboardMarkup(buttons))
@@ -84,13 +93,20 @@ async def video_handler(client, message):
 # ✅ Format Selection Handler
 @bot.on_callback_query(filters.regex("^format_"))
 async def format_handler(client, callback_query):
-    format_choice, file_path = callback_query.data.split("_", 2)[1:]
-    
+    format_choice, file_id = callback_query.data.split("_", 2)[1:]
+
+    # ✅ फाइल पाथ को Retrieve करें
+    file_path = file_store.get(file_id)
+    if not file_path:
+        await callback_query.message.edit_text("⚠ File not found. Please re-upload.")
+        return
+
+    # ✅ Resolution Select बटन भेजें
     resolutions = [
-        [InlineKeyboardButton("240p", callback_data=f"res_240p_{format_choice}_{file_path}"),
-         InlineKeyboardButton("360p", callback_data=f"res_360p_{format_choice}_{file_path}")],
-        [InlineKeyboardButton("480p", callback_data=f"res_480p_{format_choice}_{file_path}"),
-         InlineKeyboardButton("720p", callback_data=f"res_720p_{format_choice}_{file_path}")]
+        [InlineKeyboardButton("240p", callback_data=f"res_240p_{format_choice}_{file_id}"),
+         InlineKeyboardButton("360p", callback_data=f"res_360p_{format_choice}_{file_id}")],
+        [InlineKeyboardButton("480p", callback_data=f"res_480p_{format_choice}_{file_id}"),
+         InlineKeyboardButton("720p", callback_data=f"res_720p_{format_choice}_{file_id}")]
     ]
     
     await callback_query.message.edit_text("Select video quality:", reply_markup=InlineKeyboardMarkup(resolutions))
@@ -98,12 +114,18 @@ async def format_handler(client, callback_query):
 # ✅ Resolution Selection Handler
 @bot.on_callback_query(filters.regex("^res_"))
 async def resolution_handler(client, callback_query):
-    res_choice, format_choice, file_path = callback_query.data.split("_", 3)[1:]
-    
+    res_choice, format_choice, file_id = callback_query.data.split("_", 3)[1:]
+
+    # ✅ फाइल पाथ को Retrieve करें
+    file_path = file_store.get(file_id)
+    if not file_path:
+        await callback_query.message.edit_text("⚠ File not found. Please re-upload.")
+        return
+
     audio_formats = [
-        [InlineKeyboardButton("MP3", callback_data=f"audio_mp3_{res_choice}_{format_choice}_{file_path}"),
-         InlineKeyboardButton("AAC", callback_data=f"audio_aac_{res_choice}_{format_choice}_{file_path}")],
-        [InlineKeyboardButton("WAV", callback_data=f"audio_wav_{res_choice}_{format_choice}_{file_path}")]
+        [InlineKeyboardButton("MP3", callback_data=f"audio_mp3_{res_choice}_{format_choice}_{file_id}"),
+         InlineKeyboardButton("AAC", callback_data=f"audio_aac_{res_choice}_{format_choice}_{file_id}")],
+        [InlineKeyboardButton("WAV", callback_data=f"audio_wav_{res_choice}_{format_choice}_{file_id}")]
     ]
     
     await callback_query.message.edit_text("Select audio format:", reply_markup=InlineKeyboardMarkup(audio_formats))
@@ -111,14 +133,20 @@ async def resolution_handler(client, callback_query):
 # ✅ Audio Selection and Convert Handler
 @bot.on_callback_query(filters.regex("^audio_"))
 async def audio_handler(client, callback_query):
-    audio_choice, res_choice, format_choice, file_path = callback_query.data.split("_", 4)[1:]
-    
+    audio_choice, res_choice, format_choice, file_id = callback_query.data.split("_", 4)[1:]
+
+    # ✅ फाइल पाथ को Retrieve करें
+    file_path = file_store.get(file_id)
+    if not file_path:
+        await callback_query.message.edit_text("⚠ File not found. Please re-upload.")
+        return
+
     res_map = {"240p": "500k", "360p": "800k", "480p": "1200k", "720p": "2500k"}
     resolution = res_map.get(res_choice, "1000k")
-    
+
     processing_msg = await callback_query.message.reply_text("\u23f3 Converting video, please wait...")
     output_path = convert_video(file_path, format_choice, resolution, audio_choice)
-    
+
     if output_path:
         await client.send_video(
             chat_id=callback_query.message.chat.id,
@@ -129,6 +157,7 @@ async def audio_handler(client, callback_query):
         try:
             os.remove(file_path)
             os.remove(output_path)
+            del file_store[file_id]  # ✅ Dictionary से फाइल हटा दो
         except Exception as e:
             logging.error(f"File Delete Error: {e}")
         logs_col.insert_one({"user_id": callback_query.from_user.id, "status": "converted"})
@@ -147,3 +176,4 @@ async def stats_handler(client, message):
 # ✅ Run Bot
 if __name__ == "__main__":
     bot.run()
+    
