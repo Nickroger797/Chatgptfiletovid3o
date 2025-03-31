@@ -51,8 +51,9 @@ def convert_video(input_path, output_format, resolution, audio_format):
                 vcodec="libx264",
                 b=resolution,
                 acodec=audio_format,
-                preset="veryfast",  # ✅ FFmpeg Speed Optimization
-                threads=4  # ✅ Multi-threading for performance
+                preset="ultrafast",  # 🔥 Super Fast Encoding
+                threads=2,           # 🔄 CPU Load Control
+                re=None              # ⏩ Real-time Mode
             )
             .run(cmd="/usr/bin/ffmpeg", overwrite_output=True)
         )
