@@ -39,10 +39,9 @@ file_store = {}
 def clean_filename(filename):
     return re.sub(r'[^\w.-]', '_', filename)
 
-# ✅ FFmpeg Video Conversion
+# ✅ Video Conversion Function
 def convert_video(input_path, output_format, resolution="1M", audio_bitrate="128k"):
     output_path = input_path.rsplit(".", 1)[0] + f"_converted.{output_format}"
-    
     try:
         (
             ffmpeg
@@ -50,16 +49,15 @@ def convert_video(input_path, output_format, resolution="1M", audio_bitrate="128
             .output(
                 output_path,
                 vcodec="libx264",
-                **{"b:v": resolution},  # ✅ सही तरीका
+                **{"b:v": resolution},
                 acodec="aac",
-                **{"b:a": audio_bitrate},  # ✅ सही तरीका
-                preset="ultrafast",  
+                **{"b:a": audio_bitrate},
+                preset="ultrafast",
                 threads=2  
             )
             .run(cmd="/usr/bin/ffmpeg", overwrite_output=True)
         )
         return output_path
-    
     except ffmpeg.Error as e:
         logging.error(f"FFmpeg Error: {e.stderr.decode()}")
         return None
@@ -127,10 +125,16 @@ async def audio_handler(client, callback_query):
         if not file_path:
             await callback_query.message.edit_text("⚠ File not found. Please re-upload.")
             return
+        
         res_map = {"240p": "500k", "360p": "800k", "480p": "1200k", "720p": "2500k"}
         resolution = res_map.get(res_choice, "1000k")
+        
+        audio_bitrate_map = {"mp3": "128k", "aac": "128k", "wav": "256k"}
+        audio_bitrate = audio_bitrate_map.get(audio_choice, "128k")
+        
         processing_msg = await callback_query.message.reply_text("⏳ Converting video, please wait...")
-        output_path = convert_video(file_path, format_choice, resolution, audio_choice)
+        output_path = convert_video(file_path, format_choice, resolution, audio_bitrate)
+        
         if output_path:
             await client.send_video(
                 chat_id=callback_query.message.chat.id,
